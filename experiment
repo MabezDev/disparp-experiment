@@ -4,22 +4,22 @@
 
 # start record
 
-time=$1    # one second
-int=$2   # network interface
+number_of_intervals=$1
+sleep_time=$2    # one second
+int=$3   # network interface
 log_file="expermient_$(date +"%Y-%m-%d_%H-%M-%S").log"
 
-while true
-	do
-		txpkts_old="`cat /sys/class/net/$int/statistics/tx_packets`" # sent packets
-		rxpkts_old="`cat /sys/class/net/$int/statistics/tx_packets`" # recv packets
-			sleep $time
-		txpkts_new="`cat /sys/class/net/$int/statistics/tx_packets`" # sent packets
-                rxpkts_new="`cat /sys/class/net/$int/statistics/tx_packets`" # recv packets
-		txpkts="`expr $txpkts_new - $txpkts_old`"		     # evaluate expressions for sent packets
-		rxpkts="`expr $rxpkts_new - $rxpkts_old`"		     # evaluate expressions for recv packets
-			echo "tx $txpkts pkts/s - rx $rxpkts pkts/ on interface $int"
-			echo "$txpkts,$rxpkts" >> $log_file
-	done
+for i in $(seq 1 $number_of_intervals); do
+	txpkts_old="`cat /sys/class/net/$int/statistics/tx_packets`" # sent packets
+	rxpkts_old="`cat /sys/class/net/$int/statistics/tx_packets`" # recv packets
+		sleep $sleep_time
+	txpkts_new="`cat /sys/class/net/$int/statistics/tx_packets`" # sent packets
+			rxpkts_new="`cat /sys/class/net/$int/statistics/tx_packets`" # recv packets
+	txpkts="`expr $txpkts_new - $txpkts_old`"		     # evaluate expressions for sent packets
+	rxpkts="`expr $rxpkts_new - $rxpkts_old`"		     # evaluate expressions for recv packets
+		echo "tx $txpkts pkts/s - rx $rxpkts pkts/ on interface $int"
+		echo "$txpkts,$rxpkts" >> $log_file
+done
 
 
 # finish record
