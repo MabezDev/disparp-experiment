@@ -1,0 +1,7 @@
+[workspace]
+
+members = [
+    "base_station",
+    "cluster_head",
+    "node",
+]

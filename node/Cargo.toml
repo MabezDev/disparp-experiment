@@ -1,0 +1,9 @@
+[package]
+name = "node"
+version = "0.1.0"
+authors = ["Scott Mabin <MabezDev@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+reqwest = "0.9.5"
+env_logger = "0.6.0"

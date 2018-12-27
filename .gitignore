@@ -1,0 +1,5 @@
+/target
+cluster_head/target
+node/target
+base_station/target
+**/*.rs.bk
