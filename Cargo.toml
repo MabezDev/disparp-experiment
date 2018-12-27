@@ -2,6 +2,7 @@
 
 members = [
     "base_station",
+    "base_station_rocket",
     "cluster_head",
     "node",
 ]
