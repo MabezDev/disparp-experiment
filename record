@@ -1,0 +1,19 @@
+#!/bin/bash
+
+number_of_intervals=$1
+sleep_time=$2    # one second
+int=$3   # network interface
+log_file="experiment_$(date +"%Y-%m-%d_%H-%M-%S").log"
+
+cargo run -p node -- --interval 300 --repeat --output http://localhost:8000/node >/dev/null 2>&1 &
+experiment_pid=$!
+
+# capture packets and bandwith - from traffic going to the base station (port 8000)
+dumpcap -i lo -a duration:10 -w file.pcap -f 'port 8000'
+capinfos file.pcap
+
+# remove the pcap
+rm file.pcap
+
+# kill the experiment
+kill -9 $experiment_pid

@@ -3,4 +3,4 @@ cluster_head/target
 node/target
 base_station/target
 **/*.rs.bk
-expermient_*
+experiment_*
