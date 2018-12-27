@@ -33,10 +33,11 @@ fn main() -> Result<(), Box<std::error::Error>> {
     let opt = Opt::from_args();
     println!("{:?}", opt);
     let mut rng = rand::thread_rng();
+    let mut client = reqwest::Client::new();
 
     if opt.repeat {
         loop {
-            run_req(&opt)?;
+            run_req(&mut client, &opt)?;
             let interval = if opt.interval == 0 {
                 rng.gen_range(0u64, 1000u64)
             } else {
@@ -45,7 +46,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
             thread::sleep(time::Duration::from_millis(interval));
         }
     } else {
-        run_req(&opt)?;
+        run_req(&mut client, &opt)?;
     }
 
     
@@ -54,14 +55,15 @@ fn main() -> Result<(), Box<std::error::Error>> {
     Ok(())
 }
 
-fn run_req(opt: &Opt) -> Result<(), Box<std::error::Error>> {
-    let mut res = reqwest::get(opt.output.as_str())?;
+fn run_req(client: &mut reqwest::Client, opt: &Opt) -> Result<(), Box<std::error::Error>> {
+    let res = client.post(opt.output.as_str())
+    .body(format!("{{ data: {} }}", 32))
+    .send()?;
     println!("Status: {}", res.status());
 
     // copy the response body directly to stdout
     if opt.debug {
         println!("Headers:\n{:?}", res.headers());
-        std::io::copy(&mut res, &mut std::io::stdout())?;
     }
     Ok(())
 }
