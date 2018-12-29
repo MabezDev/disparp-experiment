@@ -1,10 +1,53 @@
 #!/bin/bash
 
-experiment=$1
+usage() { echo "Usage: $0 [-e 1|2|3 ]" 1>&2; exit 1; }
+
 log_file="experiment_$(date +"%Y-%m-%d_%H-%M-%S").log"
 
+while getopts e: option; do
+ case "${option}" in
+    e) 
+        E=${OPTARG}
+        ((E == 1 || E == 2 || E == 3)) || usage ;;
+    *)
+        usage ;;
+ esac
+done
 
-cargo run -p node -- --count 40 --interval 0 --repeat --output http://localhost:8000/node >/dev/null 2>&1 &
+if [ -z "$E" ]
+then
+   usage
+fi
+
+experiment_1() { 
+    # experiment 1 - base line
+    cargo run -p node -- --count 40 --interval 0 --repeat --output http://localhost:8000/node >/dev/null 2>&1 &
+}
+
+experiment_2() { 
+    # experiment 2 - two clusters - no aggregation
+    ROCKET_PORT=8001 cargo run -p cluster_head -- --output http://localhost:8000/node
+    ROCKET_PORT=8002 cargo run -p cluster_head -- --output http://localhost:8000/node
+    cargo run -p node -- --count 20 --interval 0 --repeat --output http://localhost:8001/node >/dev/null 2>&1 &
+    cargo run -p node -- --count 20 --interval 0 --repeat --output http://localhost:8002/node >/dev/null 2>&1 &
+}
+
+experiment_3() { 
+    # experiment 3 - two clusters - aggregation
+    ROCKET_PORT=8001 cargo run -p cluster_head -- --output http://localhost:8000/node --aggregate 100
+    ROCKET_PORT=8002 cargo run -p cluster_head -- --output http://localhost:8000/node --aggregate 100
+    cargo run -p node -- --count 20 --interval 0 --repeat --output http://localhost:8001/node >/dev/null 2>&1 &
+    cargo run -p node -- --count 20 --interval 0 --repeat --output http://localhost:8002/node >/dev/null 2>&1 &
+}
+
+case "${E}"
+ in
+    1) experiment_1
+    ;;
+    2) experiment_2
+    ;;
+    3) experiment_3
+ esac
 
 # capture packets and bandwith - from traffic going to the base station (port 8000)
 dumpcap -i lo -a duration:10 -w file.pcap -f 'port 8000'
@@ -15,3 +58,4 @@ rm file.pcap
 
 # kill the experiment
 killall -9 node
+killall -9 cluster_head
