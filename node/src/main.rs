@@ -11,7 +11,7 @@ use rand::prelude::*;
 use structopt::StructOpt;
 use std::{thread, time};
 
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Clone)]
 #[structopt(name = "node")]
 struct Opt {
     /// Enable more output
@@ -35,26 +35,35 @@ fn main() -> Result<(), Box<std::error::Error>> {
     env_logger::init();
     let opt = Opt::from_args();
     println!("{:?}", opt);
+    let mut children = vec![];
 
-    thread::spawn(move || {
-        let mut rng = rand::thread_rng();
-        let mut client = reqwest::Client::new();
-        if opt.repeat {
-        loop {
-            run_req(&mut client, &opt).unwrap();
-            let interval = if opt.interval == 0 {
-                rng.gen_range(0u64, 1000u64)
+    for i in 0..opt.nodes {
+        let opt = opt.clone();
+        // Spin up another thread
+        children.push(thread::spawn(move || {
+            println!("Spawning node {}", i);
+            let mut rng = rand::thread_rng();
+            let mut client = reqwest::Client::new();
+            if opt.repeat {
+            loop {
+                run_req(&mut client, &opt).unwrap();
+                let interval = if opt.interval == 0 {
+                    rng.gen_range(0u64, 500u64)
+                } else {
+                    opt.interval
+                };
+                thread::sleep(time::Duration::from_millis(interval));
+                }
             } else {
-                opt.interval
-            };
-            thread::sleep(time::Duration::from_millis(interval));
+                run_req(&mut client, &opt).unwrap();
             }
-        } else {
-            run_req(&mut client, &opt).unwrap();
-        }
-    });
+        }));
+    }
 
-    
+    for child in children {
+        // Wait for the thread to finish. Returns a result.
+        let _ = child.join();
+    }    
 
     println!("\n\nDone.");
     Ok(())
