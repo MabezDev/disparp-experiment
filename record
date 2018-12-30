@@ -28,6 +28,7 @@ experiment_2() {
     # experiment 2 - two clusters - no aggregation
     ROCKET_PORT=8001 cargo run -p cluster_head -- --output http://localhost:8000/node >/dev/null 2>&1 &
     ROCKET_PORT=8002 cargo run -p cluster_head -- --output http://localhost:8000/node >/dev/null 2>&1 &
+    sleep 1 # allow start
     cargo run -p node -- --count 20 --repeat 20 --interval 0 --output http://localhost:8001/node >/dev/null 2>&1 &
     cargo run -p node -- --count 20 --repeat 20 --interval 0 --output http://localhost:8002/node >/dev/null 2>&1 &
 }
@@ -36,6 +37,7 @@ experiment_3() {
     # experiment 3 - two clusters - aggregation
     ROCKET_PORT=8001 cargo run -p cluster_head -- --output http://localhost:8000/node --aggregate 100 >/dev/null 2>&1 &
     ROCKET_PORT=8002 cargo run -p cluster_head -- --output http://localhost:8000/node --aggregate 100 >/dev/null 2>&1 &
+    sleep 1 # allow start 
     cargo run -p node -- --count 20 --repeat 20 --interval 0 --output http://localhost:8001/node >/dev/null 2>&1 &
     cargo run -p node -- --count 20 --repeat 20 --interval 0 --output http://localhost:8002/node >/dev/null 2>&1 &
 }
