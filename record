@@ -21,25 +21,26 @@ fi
 
 experiment_1() { 
     # experiment 1 - base line
-    cargo run -p node -- --count 40 --interval 0 --repeat --output http://localhost:8000/node >/dev/null 2>&1 &
+    cargo run -p node -- --count 40 --repeat 20 --interval 0 --output http://localhost:8000/node >/dev/null 2>&1 &
 }
 
 experiment_2() { 
     # experiment 2 - two clusters - no aggregation
-    ROCKET_PORT=8001 cargo run -p cluster_head -- --output http://localhost:8000/node
-    ROCKET_PORT=8002 cargo run -p cluster_head -- --output http://localhost:8000/node
-    cargo run -p node -- --count 20 --interval 0 --repeat --output http://localhost:8001/node >/dev/null 2>&1 &
-    cargo run -p node -- --count 20 --interval 0 --repeat --output http://localhost:8002/node >/dev/null 2>&1 &
+    ROCKET_PORT=8001 cargo run -p cluster_head -- --output http://localhost:8000/node >/dev/null 2>&1 &
+    ROCKET_PORT=8002 cargo run -p cluster_head -- --output http://localhost:8000/node >/dev/null 2>&1 &
+    cargo run -p node -- --count 20 --repeat 20 --interval 0 --output http://localhost:8001/node >/dev/null 2>&1 &
+    cargo run -p node -- --count 20 --repeat 20 --interval 0 --output http://localhost:8002/node >/dev/null 2>&1 &
 }
 
 experiment_3() { 
     # experiment 3 - two clusters - aggregation
-    ROCKET_PORT=8001 cargo run -p cluster_head -- --output http://localhost:8000/node --aggregate 100
-    ROCKET_PORT=8002 cargo run -p cluster_head -- --output http://localhost:8000/node --aggregate 100
-    cargo run -p node -- --count 20 --interval 0 --repeat --output http://localhost:8001/node >/dev/null 2>&1 &
-    cargo run -p node -- --count 20 --interval 0 --repeat --output http://localhost:8002/node >/dev/null 2>&1 &
+    ROCKET_PORT=8001 cargo run -p cluster_head -- --output http://localhost:8000/node --aggregate 100 >/dev/null 2>&1 &
+    ROCKET_PORT=8002 cargo run -p cluster_head -- --output http://localhost:8000/node --aggregate 100 >/dev/null 2>&1 &
+    cargo run -p node -- --count 20 --repeat 20 --interval 0 --output http://localhost:8001/node >/dev/null 2>&1 &
+    cargo run -p node -- --count 20 --repeat 20 --interval 0 --output http://localhost:8002/node >/dev/null 2>&1 &
 }
 
+echo "Beginning Experiment ${E}..."
 case "${E}"
  in
     1) experiment_1
@@ -48,14 +49,17 @@ case "${E}"
     ;;
     3) experiment_3
  esac
-
 # capture packets and bandwith - from traffic going to the base station (port 8000)
-dumpcap -i lo -a duration:10 -w file.pcap -f 'port 8000'
+dumpcap -i lo -a duration:15 -w file.pcap -f 'port 8000'
+
+
 capinfos file.pcap
 
 # remove the pcap
 rm file.pcap
 
 # kill the experiment
-killall -9 node
-killall -9 cluster_head
+killall -q -9 node
+killall -q -9 cluster_head
+
+echo "End"

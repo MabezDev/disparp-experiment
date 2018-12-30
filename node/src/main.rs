@@ -20,9 +20,9 @@ struct Opt {
     /// Post location
     #[structopt(short = "o", long = "output")]
     output: String,
-    /// Repeat the transmition
-    #[structopt(short = "r", long = "repeat")]
-    repeat: bool,
+    /// Repeat the transmition X times, default is 0, don't repeat
+    #[structopt(short = "r", long = "repeat",default_value = "0")]
+    repeat: u32,
     /// Interval between repeat transmitions in ms - 0 will choose a random repeat value between 0 and 100ms
     #[structopt(short = "i", long = "interval", default_value = "100")]
     interval: u64,
@@ -38,21 +38,22 @@ fn main() -> Result<(), Box<std::error::Error>> {
     let mut children = vec![];
 
     for i in 0..opt.nodes {
-        let opt = opt.clone();
+        let mut opt = opt.clone();
         // Spin up another thread
         children.push(thread::spawn(move || {
             println!("Spawning node {}", i);
             let mut rng = rand::thread_rng();
             let mut client = reqwest::Client::new();
-            if opt.repeat {
-            loop {
-                run_req(&mut client, &opt).unwrap();
-                let interval = if opt.interval == 0 {
-                    rng.gen_range(0u64, 500u64)
-                } else {
-                    opt.interval
-                };
-                thread::sleep(time::Duration::from_millis(interval));
+            if opt.repeat > 0 {
+                loop {
+                    run_req(&mut client, &opt).unwrap();
+                    let interval = if opt.interval == 0 {
+                        rng.gen_range(0u64, 500u64)
+                    } else {
+                        opt.interval
+                    };
+                    thread::sleep(time::Duration::from_millis(interval));
+                    opt.repeat -= 1; // 
                 }
             } else {
                 run_req(&mut client, &opt).unwrap();
