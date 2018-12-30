@@ -41,6 +41,10 @@ experiment_3() {
 }
 
 echo "Beginning Experiment ${E}..."
+
+cargo run -p base_station >/dev/null 2>&1 &
+sleep 1
+
 case "${E}"
  in
     1) experiment_1
@@ -61,5 +65,6 @@ rm file.pcap
 # kill the experiment
 killall -q -9 node
 killall -q -9 cluster_head
+killall -q -9 base_station
 
 echo "End"
