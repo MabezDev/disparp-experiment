@@ -47,6 +47,9 @@ echo "Beginning Experiment ${E}..."
 cargo run -p base_station >/dev/null 2>&1 &
 sleep 1
 
+# capture packets and bandwith - from traffic going to the base station (port 8000)
+dumpcap -i lo -a duration:15 -w file.pcap -f 'port 8000'
+
 case "${E}"
  in
     1) experiment_1
@@ -55,8 +58,6 @@ case "${E}"
     ;;
     3) experiment_3
  esac
-# capture packets and bandwith - from traffic going to the base station (port 8000)
-dumpcap -i lo -a duration:15 -w file.pcap -f 'port 8000'
 
 
 capinfos file.pcap
